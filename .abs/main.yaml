@@ -1,0 +1,5 @@
+replace-chart-version-with-git: true
+generate-metadata: true
+chart-dir: ./helm/cilium-extensions
+destination: ./build
+helm-template-extra-values: ./helm/cilium-extensions/ci/ci-values.yaml
