@@ -1,0 +1,19 @@
+{{- if .Values.ipam.nodeConfigs.enabled }}
+{{- range $cpu, $size := .Values.ipam.nodeConfigs.sizes }}
+---
+apiVersion: cilium.io/v2
+kind: CiliumNodeConfig
+metadata:
+  name: ipam-{{ $cpu }}-cpu
+  namespace: kube-system
+  labels:
+    {{- include "labels.common" $ | nindent 4 }}
+spec:
+  nodeSelector:
+    matchLabels:
+      {{ $.Values.ipam.nodeConfigs.nodeLabel | quote }}: {{ $cpu | quote }}
+  defaults:
+    ipam-min-allocate: {{ $size.minAllocate | int | toString | quote }}
+    ipam-pre-allocate: {{ $size.preAllocate | int | toString | quote }}
+{{- end }}
+{{- end }}

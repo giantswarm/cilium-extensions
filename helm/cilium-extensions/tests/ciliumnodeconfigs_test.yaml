@@ -1,0 +1,99 @@
+suite: ciliumnodeconfigs
+templates:
+  - templates/ciliumnodeconfigs.yaml
+tests:
+  - it: renders nothing by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders one CiliumNodeConfig per size
+    set:
+      ipam.nodeConfigs.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 4
+      - isKind:
+          of: CiliumNodeConfig
+      - equal:
+          path: metadata.namespace
+          value: kube-system
+
+  - it: sets the 32 vCPU size
+    set:
+      ipam.nodeConfigs.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: ipam-32-cpu
+    asserts:
+      - equal:
+          path: spec.nodeSelector.matchLabels["karpenter.k8s.aws/instance-cpu"]
+          value: "32"
+      - equal:
+          path: spec.defaults
+          value:
+            ipam-min-allocate: "224"
+            ipam-pre-allocate: "16"
+
+  - it: adds a size from the values
+    set:
+      ipam.nodeConfigs.enabled: true
+      ipam.nodeConfigs.sizes:
+        "48":
+          minAllocate: 320
+          preAllocate: 32
+    asserts:
+      - hasDocuments:
+          count: 5
+  - it: renders an added size
+    set:
+      ipam.nodeConfigs.enabled: true
+      ipam.nodeConfigs.sizes:
+        "48":
+          minAllocate: 320
+          preAllocate: 32
+    documentSelector:
+      path: metadata.name
+      value: ipam-48-cpu
+    asserts:
+      - equal:
+          path: spec.nodeSelector.matchLabels["karpenter.k8s.aws/instance-cpu"]
+          value: "48"
+      - equal:
+          path: spec.defaults
+          value:
+            ipam-min-allocate: "320"
+            ipam-pre-allocate: "32"
+  - it: removes a default size set to null
+    set:
+      ipam.nodeConfigs.enabled: true
+      ipam.nodeConfigs.sizes:
+        "4": null
+    asserts:
+      - hasDocuments:
+          count: 3
+  - it: selects on another node label
+    set:
+      ipam.nodeConfigs.enabled: true
+      ipam.nodeConfigs.nodeLabel: example.com/vcpu
+    documentSelector:
+      path: metadata.name
+      value: ipam-16-cpu
+    asserts:
+      - equal:
+          path: spec.nodeSelector.matchLabels["example.com/vcpu"]
+          value: "16"
+  - it: overrides a size from the values
+    set:
+      ipam.nodeConfigs.enabled: true
+      ipam.nodeConfigs.sizes:
+        "16":
+          minAllocate: 112
+          preAllocate: 16
+    documentSelector:
+      path: metadata.name
+      value: ipam-16-cpu
+    asserts:
+      - equal:
+          path: spec.defaults.ipam-min-allocate
+          value: "112"
