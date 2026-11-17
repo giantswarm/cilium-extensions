@@ -10,3 +10,37 @@ image:
   tag: ""
 registry:
   domain: gsoci.azurecr.io
+
+# IP pre-allocation of Cilium's ENI IPAM per node size, as CiliumNodeConfigs.
+# A new node starts with a single /28 prefix when prefix delegation is on, so
+# the first pods on it fail with "all CIDR ranges are exhausted" until the
+# operator allocates more. min-allocate gives a node of that size the IPs of the
+# pods it runs at once. Sizes not in the table keep Cilium's defaults.
+# Context: https://github.com/giantswarm/roadmap/issues/4435
+ipam:
+  nodeConfigs:
+    # -- Render the CiliumNodeConfigs. Only for Cilium in ENI mode with nodes
+    # Karpenter labels with their vCPU count (EKS). The CiliumNodeConfig CRD
+    # has to exist, so install this chart after Cilium.
+    enabled: false
+    # -- Node label the sizes are selected on: the node's vCPU count.
+    nodeLabel: karpenter.k8s.aws/instance-cpu
+    # -- IPAM settings per vCPU count. minAllocate is the IPs a node of that
+    # size gets when it starts, preAllocate the free IPs the operator keeps on
+    # it after that. Keep minAllocate a multiple of 16 (a /28 prefix) and below
+    # the node pool's maxPods. 4, 8 and 16 vCPU are tested in roadmap#4433 and
+    # roadmap#4435; 224 on 32 vCPU adds two prefixes over the 192 tested, which
+    # were too tight for 188 pods.
+    sizes:  # @schema skipProperties: true; additionalProperties: false; patternProperties: {"^[0-9]+$": {"type": "object", "additionalProperties": false, "required": ["minAllocate", "preAllocate"], "properties": {"minAllocate": {"type": "integer", "minimum": 0}, "preAllocate": {"type": "integer", "minimum": 0}}}}
+      "4":
+        minAllocate: 32
+        preAllocate: 16
+      "8":
+        minAllocate: 48
+        preAllocate: 16
+      "16":
+        minAllocate: 96
+        preAllocate: 16
+      "32":
+        minAllocate: 224
+        preAllocate: 16

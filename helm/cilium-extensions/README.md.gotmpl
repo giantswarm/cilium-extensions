@@ -11,6 +11,13 @@
 
 {{ template "chart.requirementsSection" . }}
 
+## IP pre-allocation per node size
+
+With `ipam.nodeConfigs.enabled` the chart renders one CiliumNodeConfig per entry of `ipam.nodeConfigs.sizes`, selected on the node's vCPU count. Install it after Cilium: the CiliumNodeConfig CRD only exists once the cilium-operator runs.
+
+- The Cilium agent reads its CiliumNodeConfig when it starts. A new node gets it at once; a node that runs already keeps its settings until its agent restarts (a node roll, or a rollout restart of the cilium DaemonSet).
+- Sizes not in the table keep Cilium's defaults. Values merge into the default table: a size is added or changed by setting it, and removed only by setting it to `null`.
+
 {{ template "chart.valuesSection" . }}
 
 ## CI values
