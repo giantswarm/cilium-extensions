@@ -27,20 +27,22 @@ ipam:
     nodeLabel: karpenter.k8s.aws/instance-cpu
     # -- IPAM settings per vCPU count. minAllocate is the IPs a node of that
     # size gets when it starts, preAllocate the free IPs the operator keeps on
-    # it after that. Keep minAllocate a multiple of 16 (a /28 prefix) and below
-    # the node pool's maxPods. 4, 8 and 16 vCPU are tested in roadmap#4433 and
-    # roadmap#4435; 224 on 32 vCPU adds two prefixes over the 192 tested, which
-    # were too tight for 188 pods.
+    # it after that. Keep minAllocate a multiple of 16 (a /28 prefix) and at
+    # most the node pool's maxPods rounded up to a /28: 112 for the default
+    # 110. The defaults are sized for busy nodes on production clusters, about
+    # the p95 of pods with a pod IP per node of that size, and 32 vCPU is
+    # capped by maxPods. 16 vCPU at 96/16 is the size tested in roadmap#4433
+    # and roadmap#4435.
     sizes:  # @schema skipProperties: true; additionalProperties: false; patternProperties: {"^[0-9]+$": {"type": "object", "additionalProperties": false, "required": ["minAllocate", "preAllocate"], "properties": {"minAllocate": {"type": "integer", "minimum": 0}, "preAllocate": {"type": "integer", "minimum": 0}}}}
       "4":
-        minAllocate: 32
+        minAllocate: 48
         preAllocate: 16
       "8":
-        minAllocate: 48
+        minAllocate: 96
         preAllocate: 16
       "16":
         minAllocate: 96
         preAllocate: 16
       "32":
-        minAllocate: 224
+        minAllocate: 112
         preAllocate: 16
