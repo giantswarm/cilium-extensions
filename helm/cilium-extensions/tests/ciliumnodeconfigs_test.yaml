@@ -32,7 +32,55 @@ tests:
       - equal:
           path: spec.defaults
           value:
-            ipam-min-allocate: "224"
+            ipam-min-allocate: "112"
+            ipam-pre-allocate: "16"
+
+  - it: sets the 4 vCPU size
+    set:
+      ipam.nodeConfigs.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: ipam-4-cpu
+    asserts:
+      - equal:
+          path: spec.nodeSelector.matchLabels["karpenter.k8s.aws/instance-cpu"]
+          value: "4"
+      - equal:
+          path: spec.defaults
+          value:
+            ipam-min-allocate: "48"
+            ipam-pre-allocate: "16"
+
+  - it: sets the 8 vCPU size
+    set:
+      ipam.nodeConfigs.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: ipam-8-cpu
+    asserts:
+      - equal:
+          path: spec.nodeSelector.matchLabels["karpenter.k8s.aws/instance-cpu"]
+          value: "8"
+      - equal:
+          path: spec.defaults
+          value:
+            ipam-min-allocate: "96"
+            ipam-pre-allocate: "16"
+
+  - it: sets the 16 vCPU size
+    set:
+      ipam.nodeConfigs.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: ipam-16-cpu
+    asserts:
+      - equal:
+          path: spec.nodeSelector.matchLabels["karpenter.k8s.aws/instance-cpu"]
+          value: "16"
+      - equal:
+          path: spec.defaults
+          value:
+            ipam-min-allocate: "96"
             ipam-pre-allocate: "16"
 
   - it: adds a size from the values
